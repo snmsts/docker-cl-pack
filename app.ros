@@ -1,0 +1,26 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|
+exec ros -Q -- $0 "$@"
+|#
+(progn ;;init forms
+  (ros:ensure-asdf)
+  (ql:quickload '(:clack :clack-handler-hunchentoot)))
+
+(defpackage :ros.script.app.3729848891
+  (:use :cl))
+(in-package :ros.script.app.3729848891)
+
+(defun main (&rest argv)
+  (if (not argv)
+      (progn
+        (clack:clackup
+         (lambda (env)
+           (declare (ignore env))
+           '(200 (:content-type "text/plain")
+             ("Hello, Clack!")))
+         :port 8000)
+        (loop (sleep 1)))
+      (progn ;; test
+        (print "test"))))
+;;; vim: set ft=lisp lisp:
