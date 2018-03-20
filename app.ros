@@ -12,13 +12,16 @@ exec ros -Q -- $0 "$@"
 (in-package :ros.script.app.3729848891)
 
 (defun main (&rest argv)
+  (uiop:run-program "ip addr" :output *standard-output*)
   (if (not argv)
       (progn
         (clack:clackup
          (lambda (env)
            (declare (ignore env))
-           '(200 (:content-type "text/plain")
-             ("Hello, Clack!")))
+           `(200 (:content-type "text/plain")
+                 (,(format nil "Hello, Clack! PID=~A"
+                           #+sbcl(sb-posix:getpid)
+                           #-sbcl"not supported"))))
          :port 8000)
         (loop (sleep 1)))
       (progn ;; test
