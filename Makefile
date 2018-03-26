@@ -34,7 +34,10 @@ clean-base:
 rebuild-base:
 	make clean-base || true
 	make base
-install-emacs: base
+install-emacs: home/.emacs.d/init.el
+
+home/.emacs.d/init.el:
+	make base
 	$(DOCKER_RUN) /bin/sh -c "ros setup"
 	$(DOCKER_RUN) /bin/sh -c "ros install slime"
 	$(DOCKER_RUN) /bin/sh -c "ros install clhs"
