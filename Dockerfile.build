@@ -1,21 +1,18 @@
-FROM frolvlad/alpine-glibc:alpine-3.6
+FROM debian:stretch
 
-ARG work_dir=/tmp/setup
-RUN mkdir ${work_dir} && \
-    chmod 777 ${work_dir}
+RUN apt-get update\
+    && apt-get install -y automake git build-essential libcurl4-openssl-dev zlib1g-dev\
+    && apt-get install -y emacs25-nox git w3m \
+    && rm -rf /var/lib/apt/lists/*
 
 # --- install roswell --- #
 
-RUN apk add --no-cache --virtual=for-build git automake autoconf make gcc build-base curl-dev glib-dev && \
-    cd ${work_dir} && \
-    git clone --depth=1 -b release https://github.com/roswell/roswell.git && \
+RUN git clone --depth=1 -b release https://github.com/roswell/roswell.git && \
     cd roswell && \
     sh bootstrap && \
     ./configure --disable-manual-install && \
     make && \
     make install && \
     cd .. && \
-    rm -rf roswell && \
-    apk del for-build
+    rm -rf roswell
 
-RUN apk add --no-cache make curl-dev openssl-dev
