@@ -5,7 +5,15 @@ exec ros -Q -- $0 "$@"
 |#
 (progn ;;init forms
   (ros:ensure-asdf)
-  (ql:quickload '(:clack :clack-handler-hunchentoot)))
+  (ql:quickload '(:clack :clack-handler-hunchentoot))
+  #+sbcl
+  (loop for x in sb-sys:*shared-objects*
+     for name = (file-namestring (sb-alien::shared-object-pathname x))
+     with orig = "libssl.so."
+     with to = "libssl.so.1.0.0"
+     when (string-equal orig name :end2 (min (length orig) (length name)))
+     do (setf (sb-alien::shared-object-pathname x) (make-pathname :defaults to)
+              (sb-alien::shared-object-namestring x) to)))
 
 (defpackage :ros.script.app.3729848891
   (:use :cl))

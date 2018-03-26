@@ -23,12 +23,11 @@ shell: base
 	$(DOCKER_RUN) /bin/sh
 clean:
 	make clean-base
-	rm -rf home
+	find ./home/. \! -name 'app.ros' -delete
 	docker rmi -f $(PROJECT) || true
 base:
 	docker images | grep $(BASE_IMAGE) || docker build -f Dockerfile.build -t $(BASE_IMAGE) .
-	mkdir -p home
-	cp Makefile app.ros home
+	cp Makefile home
 clean-base:
 	docker rmi -f $(BASE_IMAGE)
 rebuild-base:
