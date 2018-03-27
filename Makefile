@@ -17,13 +17,13 @@ app: base
 test-app: base
 	$(DOCKER_RUN) /bin/sh -c "make test"
 run:
-	docker images | grep $(PROJECT) || make pack
+	docker images | grep $(PROJECT) || make PROJECT=$(PROJECT) pack
 	docker run -it $(PROJECT)
 
 shell: base
 	$(DOCKER_RUN) /bin/sh
 clean:
-	make clean-base
+	make PROJECT=$(PROJECT) clean-base
 	find ./home/. \! -name 'app.ros' -delete
 	docker rmi -f $(PROJECT) || true
 base:
@@ -32,12 +32,12 @@ base:
 clean-base:
 	docker rmi -f $(BASE_IMAGE)
 rebuild-base:
-	make clean-base || true
-	make base
+	make PROJECT=$(PROJECT) clean-base || true
+	make PROJECT=$(PROJECT) base
 install-emacs: home/.emacs.d/init.el
 
 home/.emacs.d/init.el:
-	make base
+	make PROJECT=$(PROJECT) base
 	$(DOCKER_RUN) /bin/sh -c "ros setup"
 	$(DOCKER_RUN) /bin/sh -c "ros install slime"
 	$(DOCKER_RUN) /bin/sh -c "ros install clhs"
