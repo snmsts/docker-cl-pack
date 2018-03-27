@@ -1,6 +1,7 @@
 PROJECT=`basename "$(PWD)"`
 BASE_IMAGE = $(PROJECT)-build
 DOCKER_RUN = docker run \
+	  -v `pwd`/..:/mnt/parent \
 	  -v `pwd`/home:$$HOME \
 	  -v /etc/group:/etc/group:ro \
 	  -v /etc/passwd:/etc/passwd:ro \
