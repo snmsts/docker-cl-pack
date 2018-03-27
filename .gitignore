@@ -1,3 +1,5 @@
 home/Makefile
 home/.cache
 home/app
+home/.emacs.d
+home/.slime*
