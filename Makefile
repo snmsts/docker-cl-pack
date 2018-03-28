@@ -52,8 +52,16 @@ home/.emacs.d/init.el:
 
 # below are used inside container.
 build:
-	ros build app.ros
+	if [ -f build ]; then \
+		./build; \
+	else \
+		ros build app.ros; \
+	fi
 test:
-	ros app.ros test
+	if [ -f test ] ;then \
+		./test; \
+	else \
+		ros app.ros test; \
+	fi
 
 .PHONY: pack app test-app shell clean base clean-base rebuild-base build test install-emacs
