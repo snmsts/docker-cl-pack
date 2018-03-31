@@ -1,6 +1,9 @@
-PROJECT=`basename "$(PWD)"`
+PROJECT = `basename "$(PWD)"`
 DEV_IMAGE = $(PROJECT).dev
 PACK_IMAGE = $(PROJECT).pack
+DOCKERFILE = _.Dockerfile
+DOCKERFILE_PACK = pack.Dockerfile
+DOCKERFILE_DEV = dev.Dockerfile
 DOCKER_RUN = docker run \
 	  -v `pwd`/..:/mnt/parent \
 	  -v `pwd`/home:$$HOME \
@@ -9,34 +12,42 @@ DOCKER_RUN = docker run \
 	  -u $$( id -u $$USER ):$$( id -g $$USER ) \
 	  -w $$HOME \
 	  -it $(DEV_IMAGE)
-
-pack: app test-app packer
-	printf "%s\n%s\n" "FROM $(PACK_IMAGE)" "`tail -n +2 Dockerfile`" > Dockerfile
+all: test-app pack
+%.Dockerfile: base/%.Dockerfile
+	cp $< $@
+home/%.ros: base/%.ros
+	cp $< $@ ||true
+pack: packer $(DOCKERFILE)
+	printf "%s\n%s\n" "FROM $(PACK_IMAGE)" "`tail -n +2 base/$(DOCKERFILE)`" > $(DOCKERFILE).tmp
+	cmp -s $(DOCKERFILE).tmp $(DOCKERFILE)||cp $(DOCKERFILE).tmp $(DOCKERFILE)
+	rm -f $(DOCKERFILE).tmp
 	docker rmi -f $(PROJECT) || true
-	docker build -f Dockerfile -t $(PROJECT) .
-packer:
-	docker images | grep $(PACK_IMAGE) || docker build -f Dockerfile.pack -t $(PACK_IMAGE) .
+	docker build -f $(DOCKERFILE) -t $(PROJECT) .
+
+packer: $(DOCKERFILE_PACK)
+	docker images | grep $(PACK_IMAGE)[^\.] || docker build -f $(DOCKERFILE_PACK) -t $(PACK_IMAGE) .
 clean-packer:
 	docker rmi -f $(PACK_IMAGE) || true
 rebuild-packer:
 	make PROJECT=$(PROJECT) clean-base || true
 	make PROJECT=$(PROJECT) packer
-app: base
+app: base home/app.ros
 	$(DOCKER_RUN) /bin/sh -c "make build"
-test-app: base
+test-app: app
 	$(DOCKER_RUN) /bin/sh -c "make test"
 run:
-	docker images | grep $(PROJECT) || make PROJECT=$(PROJECT) pack
+	docker images | grep $(PROJECT)[^\.] || make PROJECT=$(PROJECT) pack
 	docker run -it $(PROJECT)
 
 shell: base
 	$(DOCKER_RUN) /bin/sh
 clean:
 	make PROJECT=$(PROJECT) clean-base
-	find ./home/. \! -name 'app.ros' -delete || true
+	rm -rf ./home/
 	docker rmi -f $(PROJECT) || true
-base:
-	docker images | grep $(DEV_IMAGE) || docker build -f Dockerfile.dev -t $(DEV_IMAGE) .
+	rm -f dev.Dockerfile pack.Dockerfile
+base: $(DOCKERFILE_DEV)
+	docker images | grep $(DEV_IMAGE)[^\.] || docker build -f $(DOCKERFILE_DEV) -t $(DEV_IMAGE) .
 	cp Makefile home
 clean-base:
 	docker rmi -f $(DEV_IMAGE) || true
