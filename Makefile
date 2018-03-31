@@ -1,5 +1,6 @@
 PROJECT=`basename "$(PWD)"`
-BASE_IMAGE = $(PROJECT)-build
+DEV_IMAGE = $(PROJECT).dev
+PACK_IMAGE = $(PROJECT).pack
 DOCKER_RUN = docker run \
 	  -v `pwd`/..:/mnt/parent \
 	  -v `pwd`/home:$$HOME \
@@ -7,11 +8,19 @@ DOCKER_RUN = docker run \
 	  -v /etc/passwd:/etc/passwd:ro \
 	  -u $$( id -u $$USER ):$$( id -g $$USER ) \
 	  -w $$HOME \
-	  -it $(BASE_IMAGE)
+	  -it $(DEV_IMAGE)
 
-pack: app test-app
+pack: app test-app packer
+	printf "%s\n%s\n" "FROM $(PACK_IMAGE)" "`tail -n +2 Dockerfile`" > Dockerfile
 	docker rmi -f $(PROJECT) || true
-	docker build -f Dockerfile.pack -t $(PROJECT) .
+	docker build -f Dockerfile -t $(PROJECT) .
+packer:
+	docker images | grep $(PACK_IMAGE) || docker build -f Dockerfile.pack -t $(PACK_IMAGE) .
+clean-packer:
+	docker rmi -f $(PACK_IMAGE) || true
+rebuild-packer:
+	make PROJECT=$(PROJECT) clean-base || true
+	make PROJECT=$(PROJECT) packer
 app: base
 	$(DOCKER_RUN) /bin/sh -c "make build"
 test-app: base
@@ -27,10 +36,10 @@ clean:
 	find ./home/. \! -name 'app.ros' -delete || true
 	docker rmi -f $(PROJECT) || true
 base:
-	docker images | grep $(BASE_IMAGE) || docker build -f Dockerfile.build -t $(BASE_IMAGE) .
+	docker images | grep $(DEV_IMAGE) || docker build -f Dockerfile.dev -t $(DEV_IMAGE) .
 	cp Makefile home
 clean-base:
-	docker rmi -f $(BASE_IMAGE) || true
+	docker rmi -f $(DEV_IMAGE) || true
 rebuild-base:
 	make PROJECT=$(PROJECT) clean-base || true
 	make PROJECT=$(PROJECT) base
