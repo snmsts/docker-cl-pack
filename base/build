@@ -1,0 +1,2 @@
+#!/bin/sh
+ros build app.ros

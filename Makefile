@@ -12,10 +12,11 @@ DOCKER_RUN = docker run \
 	  -u $$( id -u $$USER ):$$( id -g $$USER ) \
 	  -w $$HOME \
 	  -it $(DEV_IMAGE)
+FILES = app.ros build test
 all: test-app pack
 %.Dockerfile: base/%.Dockerfile
 	cp $< $@
-home/%.ros: base/%.ros
+home/%: base/%
 	cp $< $@ ||true
 pack: packer $(DOCKERFILE)
 	printf "%s\n%s\n" "FROM $(PACK_IMAGE)" "`tail -n +2 base/$(DOCKERFILE)`" > $(DOCKERFILE).tmp
@@ -55,7 +56,7 @@ rebuild-base:
 	make PROJECT=$(PROJECT) clean-base || true
 	make PROJECT=$(PROJECT) base
 install-emacs: home/.emacs.d/init.el
-install: base
+install: base $(FILES:%=home/%)
 	mkdir -p home/mount
 	echo "(ignore-errors (eval (read-from-string \"(pushnew (merge-pathnames \\\"mount/\\\" (user-homedir-pathname)) ql:*local-project-directories*)\")))" > home/.roswell/init.lisp
 home/.emacs.d/init.el:
@@ -74,16 +75,8 @@ home/.emacs.d/init.el:
 
 # below are used inside container.
 build:
-	if [ -f build ]; then \
-		./build; \
-	else \
-		ros build app.ros; \
-	fi
+	./build
 test:
-	if [ -f test ] ;then \
-		./test; \
-	else \
-		ros app.ros test; \
-	fi
+	./test
 
 .PHONY: pack app test-app shell clean base clean-base rebuild-base build test install-emacs
