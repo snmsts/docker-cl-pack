@@ -55,7 +55,9 @@ rebuild-base:
 	make PROJECT=$(PROJECT) clean-base || true
 	make PROJECT=$(PROJECT) base
 install-emacs: home/.emacs.d/init.el
-
+install: base
+	mkdir -p home/mount
+	echo "(ignore-errors (eval (read-from-string \"(pushnew (merge-pathnames \\\"mount/\\\" (user-homedir-pathname)) ql:*local-project-directories*)\")))" > home/.roswell/init.lisp
 home/.emacs.d/init.el:
 	make PROJECT=$(PROJECT) base
 	$(DOCKER_RUN) /bin/sh -c "ros setup"
