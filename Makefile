@@ -59,7 +59,7 @@ rebuild-base:
 	make PROJECT=$(PROJECT) clean-base || true
 	make PROJECT=$(PROJECT) base
 install-emacs: home/.emacs.d/init.el
-install: base $(FILES:%=home/%)
+install: base $(FILES:%=home/mount/%)
 	mkdir -p home/mount
 	mkdir -p home/.roswell
 	echo "(ignore-errors (eval (read-from-string \"(pushnew (merge-pathnames \\\"mount/\\\" (user-homedir-pathname)) ql:*local-project-directories*)\")))" > home/.roswell/init.lisp
@@ -79,7 +79,7 @@ home/.emacs.d/init.el:
 hardlink:
 	rm -rf home/mount
 	cd ..;find src roswell cmds -type d |xargs -i mkdir -p $(PWD)/home/mount/{}
-	cd ..;find src roswell cmds *.asd build test app.ros -type f|xargs -i ln {} $(PWD)/home/mount/{}
+	cd ..;find src roswell cmds *.asd build test app.ros -type f|xargs -i cp {} $(PWD)/home/mount/{}
 
 # below are used inside container.
 build:
