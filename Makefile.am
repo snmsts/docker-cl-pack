@@ -17,6 +17,11 @@ update:
 	test -z "$$(docker images -q $(PACKAGE)-deps)" && make cache || true
 	docker run -w /app -i -P $(PACKAGE)-deps:latest bash -c "\$$HOME/.roswell/bin/qlot update"
 	docker cp "$$(docker ps -al -af ancestor=$(PACKAGE)-deps:latest -q):/app/qlfile.lock" qlfile.lock
+build: runtime.ros
+	ros build runtime.ros
+
+runtime.ros:
+	ros init runtime.ros
 
 clean:
 	docker rmi -f $(PACKAGE)-cl-base

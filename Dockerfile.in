@@ -47,7 +47,7 @@ RUN cd /app && $HOME/.roswell/bin/qlot install
 FROM @PACKAGE@-deps as @PACKAGE@-builder
 
 COPY ./ /app/
-RUN cd /app && $HOME/.roswell/bin/qlot exec ros build runtime.ros
+RUN cd /app && $HOME/.roswell/bin/qlot exec make build
 
 ### Execution environment
 #
