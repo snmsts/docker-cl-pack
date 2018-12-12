@@ -18,11 +18,29 @@
 FROM ubuntu:18.04 as @PACKAGE@-cl-base
 
 # Builder requires some dependent not-Common-Lisp library, because of `ql:quickload`.
-RUN apt update && apt install -y libev-dev build-essential libcurl4-gnutls-dev autoconf libncurses5-dev git wget unzip
-RUN wget https://github.com/roswell/roswell/archive/master.zip && unzip master.zip
-RUN cd roswell-master && ./bootstrap && ./configure && make && \
-    make install && ros setup && ros install qlot
+RUN apt-get update \
+    && apt-get install -y libev-dev build-essential libcurl4-gnutls-dev autoconf libncurses5-dev git sudo \
+    && rm -rf /var/lib/apt/lists/*
 
+RUN git clone --depth=1 -b release https://github.com/roswell/roswell.git && \
+    cd roswell && \
+    sh bootstrap && \
+    ./configure --disable-manual-install && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -rf roswell
+
+RUN useradd -ms /bin/bash lisp && usermod -aG sudo lisp
+RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+USER lisp
+WORKDIR /home/lisp
+
+## roswell has bug here
+RUN env \
+    && (ros || ros) \
+    && ros install qlot
 
 ### Execution environment
 #
@@ -30,8 +48,9 @@ RUN cd roswell-master && ./bootstrap && ./configure && make && \
 # `$ docker build --target @PACKAGE@-runner -t @PACKAGE@-runner .`
 FROM ubuntu:18.04 as @PACKAGE@-runner
 
-RUN apt update
-RUN apt install -y libev-dev libcurl4-gnutls-dev autoconf git
+RUN apt-get update \
+    && apt-get install -y libev-dev libcurl4-gnutls-dev autoconf git \
+    && rm -rf /var/lib/apt/lists/*
 
 ### Dependency installed environment (to reduce build speed)
 #
@@ -41,7 +60,7 @@ FROM @PACKAGE@-cl-base as @PACKAGE@-deps
 
 COPY ./qlfile /app/
 COPY ./qlfile.lock /app/
-RUN cd /app && $HOME/.roswell/bin/qlot install
+RUN sudo chown -R lisp:lisp /app && cd /app && $HOME/.roswell/bin/qlot install
 
 ### Build environment
 FROM @PACKAGE@-deps as @PACKAGE@-builder

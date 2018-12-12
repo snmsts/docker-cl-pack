@@ -5,6 +5,11 @@ cache:
 	docker build --target $(PACKAGE)-runner -t $(PACKAGE)-runner .
 	docker build --target $(PACKAGE)-deps -t $(PACKAGE)-deps .
 
+no-cache:
+	docker build --no-cache --target $(PACKAGE)-cl-base -t $(PACKAGE)-cl-base .
+	docker build --no-cache --target $(PACKAGE)-runner -t $(PACKAGE)-runner .
+	docker build --target $(PACKAGE)-deps -t $(PACKAGE)-deps .
+
 all:
 	test -z "$$(docker images -q $(PACKAGE)-deps)" && make cache || true
 	docker build -t $(PACKAGE) .
@@ -17,18 +22,13 @@ update:
 	test -z "$$(docker images -q $(PACKAGE)-deps)" && make cache || true
 	docker run -w /app -i -P $(PACKAGE)-deps:latest bash -c "\$$HOME/.roswell/bin/qlot update"
 	docker cp "$$(docker ps -al -af ancestor=$(PACKAGE)-deps:latest -q):/app/qlfile.lock" qlfile.lock
-build: runtime.ros
-	ros build runtime.ros
-
-runtime.ros:
-	ros init runtime.ros
 
 clean:
 	docker rmi -f $(PACKAGE)-cl-base
 	docker rmi -f $(PACKAGE)-runner
 	docker rmi -f $(PACKAGE)-deps
 
-dev:
+shell:
 	$(MKDIR_P) devenv
 	docker run \
 	  -v $(PWD)/devenv:$$HOME \
@@ -38,3 +38,14 @@ dev:
 	  -u $$( id -u $$USER ):$$( id -g $$USER ) \
 	  -w $$HOME \
 	  -it $(PACKAGE)-deps:latest env PATH=$$HOME/.roswell/bin:$$PATH bash -i || true
+debug:
+	docker run \
+	  -u lisp:lisp \
+	  -w /home/lisp \
+	  -it $(PACKAGE)-deps:latest env PATH=$$HOME/.roswell/bin:$$PATH bash -i || true
+
+runtime.ros:
+	ros init runtime.ros
+
+build: runtime.ros
+	ros build runtime.ros
