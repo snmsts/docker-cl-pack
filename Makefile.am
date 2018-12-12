@@ -37,12 +37,17 @@ shell:
 	  -v /etc/passwd:/etc/passwd:ro \
 	  -u $$( id -u $$USER ):$$( id -g $$USER ) \
 	  -w $$HOME \
-	  -it $(PACKAGE)-deps:latest env PATH=$$HOME/.roswell/bin:$$PATH bash -i || true
+	  -it $(PACKAGE)-deps:latest \
+	  bash -c "echo \"export PS1='[$(PACKAGE):shell] \w$$ '\" >> ~/.bashrc \
+	  && echo \"export PATH=$$HOME/.roswell/bin:$$PATH\" >> ~/.bashrc \
+	  &&bash" || true
 debug:
 	docker run \
 	  -u lisp:lisp \
 	  -w /home/lisp \
-	  -it $(PACKAGE)-deps:latest env PATH=$$HOME/.roswell/bin:$$PATH bash -i || true
+	  -it $(PACKAGE)-deps:latest \
+	  bash -c "echo \"export PS1='[$(PACKAGE):debug] \w$$ '\" >> ~/.bashrc \
+	  && bash" || true
 
 runtime.ros:
 	ros init runtime.ros

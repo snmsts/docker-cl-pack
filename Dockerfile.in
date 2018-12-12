@@ -31,7 +31,7 @@ RUN git clone --depth=1 -b release https://github.com/roswell/roswell.git && \
     cd .. && \
     rm -rf roswell
 
-RUN useradd -ms /bin/bash lisp && usermod -aG sudo lisp
+RUN useradd -ms /bin/bash lisp && sudo usermod -aG sudo lisp
 RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 USER lisp
