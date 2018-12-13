@@ -16,7 +16,7 @@ all:
 	docker run -t $(PACKAGE):latest
 	docker ps -af ancestor=$(PACKAGE):latest -q
 	$(MKDIR_P) release/$(PACKAGE_VERSION)/
-	docker cp "$$(docker ps -af ancestor=$(PACKAGE):latest -q):/usr/bin/$(PACKAGE)" release/$(PACKAGE_VERSION)/$(PACKAGE)
+	docker cp "$$(docker ps -af ancestor=$(PACKAGE):latest -q):/app" release/$(PACKAGE_VERSION)/
 
 update:
 	test -z "$$(docker images -q $(PACKAGE)-deps)" && make cache || true
@@ -27,6 +27,12 @@ clean:
 	docker rmi -f $(PACKAGE)-cl-base
 	docker rmi -f $(PACKAGE)-runner
 	docker rmi -f $(PACKAGE)-deps
+
+serve:
+	docker run \
+	  -w /app \
+	  -it $(PACKAGE):latest \
+	  bash -c "bash" || true
 
 shell:
 	$(MKDIR_P) devenv
@@ -53,4 +59,8 @@ runtime.ros:
 	ros init runtime.ros
 
 build: runtime.ros
+	rm -rf _
+	$(MKDIR_P) _
 	ros build runtime.ros
+	cp runtime _
+	cp app.lisp _

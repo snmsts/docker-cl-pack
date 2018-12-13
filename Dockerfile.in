@@ -66,13 +66,13 @@ RUN sudo chown -R lisp:lisp /app && cd /app && $HOME/.roswell/bin/qlot install
 FROM @PACKAGE@-deps as @PACKAGE@-builder
 
 COPY ./ /app/
-RUN cd /app && $HOME/.roswell/bin/qlot exec make build
+RUN sudo chown -R lisp:lisp /app && cd /app && $HOME/.roswell/bin/qlot exec make build
 
 ### Execution environment
 #
 # You can use this container to run the program or copy executable file built
 FROM @PACKAGE@-runner
 
-COPY --from=@PACKAGE@-builder /app/runtime /usr/bin/@PACKAGE@
-CMD [ "/usr/bin/@PACKAGE@", "version" ]
+COPY --from=@PACKAGE@-builder /app/_/ /app
+CMD [ "/app/runtime", "version" ]
 EXPOSE 5000
