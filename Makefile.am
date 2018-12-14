@@ -30,9 +30,10 @@ clean:
 
 serve:
 	docker run \
+	  -p $(PORT_FORWARD_PORT):5000 \
 	  -w /app \
 	  -it $(PACKAGE):latest \
-	  bash -c "bash" || true
+	  bash -c "./runtime" || true
 
 shell:
 	$(MKDIR_P) devenv
